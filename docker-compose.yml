@@ -1,0 +1,82 @@
+version: '3.5'
+
+services:
+  traefik:
+    image: traefik:v2.3
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=srosset81@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    networks:
+      - semapps
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - ./letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  middleware:
+    build:
+      context: ./middleware
+      args:
+        - SELECTED_BRANCH=techcico-instance
+        - SELECTED_DIR=src/middleware/boilerplates/pair-ldp-server
+    container_name: middleware
+    depends_on:
+      - fuseki
+      - redis
+    volumes:
+      - ./middleware/logs:/app/logs
+      - ./middleware/jwt:/app/jwt
+      - ./middleware/uploads:/app/uploads
+    networks:
+      - semapps
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.middleware.rule=Host(`data-techcico.semapps.org`)"
+      - "traefik.http.routers.middleware.entrypoints=websecure"
+      - "traefik.http.routers.middleware.tls.certresolver=myresolver"
+
+  fuseki:
+    image: stain/jena-fuseki:3.10.0
+    container_name: fuseki
+    volumes:
+      - ./data/fuseki:/fuseki
+      - ./data/staging:/staging
+    ports:
+      - "3030:3030"
+    expose:
+      - "3030"
+    networks:
+      - semapps
+    environment:
+      - ADMIN_PASSWORD: "admin"
+
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - semapps
+    command: ["redis-server", "--appendonly", "yes"]
+
+networks:
+  semapps:
+    name: semapps_network
