@@ -30,7 +30,16 @@ docker-compose build
 
 ## Maintenance
 
-### Access the middleware or mailer REPL
+### Upgrade the middleware
+
+```
+docker-compose build middleware
+docker-compose up -d
+```
+
+> Note: A new version of the middleware is built only if a change in the selected Git branch is detected.
+
+### Access the middleware REPL
 
 ```
 docker exec -it middleware pm2 attach 0
