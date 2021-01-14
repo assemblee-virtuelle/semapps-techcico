@@ -76,7 +76,7 @@ services:
       - ./data/redis:/data
     networks:
       - semapps
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", ${REDIS_PASSWORD}]
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
 
 networks:
   semapps:
