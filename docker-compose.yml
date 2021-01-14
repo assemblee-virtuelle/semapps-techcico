@@ -70,15 +70,13 @@ services:
   redis:
     image: redis
     container_name: redis
-    ports:
-      - "6379:6379"
     expose:
       - "6379"
     volumes:
       - ./data/redis:/data
     networks:
       - semapps
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    command: ["redis-server", "--appendonly", "yes"]
 
 networks:
   semapps:
